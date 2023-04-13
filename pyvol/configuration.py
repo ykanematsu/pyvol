@@ -58,6 +58,7 @@ def clean_opts(input_opts):
     opts["protein"] = input_opts.get("protein")
     opts["prot_file"] = input_opts.get("prot_file")
     opts["lig_file"] = input_opts.get("lig_file")
+    opts["workers"] = input_opts.get("workers")
 
     try:
         opts["min_rad"] = float(input_opts.get("min_rad", _option_constraints.get("general_min_rad_dflt")))

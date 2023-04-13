@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class Spheres(object):
     """ """
 
-    def __init__(self, xyz=None, r=None, xyzr=None, xyzrg=None, g=None, pdb=None, bv=None, mesh=None, name=None, spheres_file=None):
+    def __init__(self, xyz=None, r=None, xyzr=None, xyzrg=None, g=None, pdb=None, bv=None, mesh=None, name=None, spheres_file=None, workers=None):
         """
         A Spheres object contains a list of xyz centers with r radii and g groups. It can be defined using xyzrg, xyzr (and optionally g), xyz (and optionally r or g), a pdb file (and optionally r or g), or a list of vertices with normals bounded by the spheres (requires r and optionally includes g)
 
@@ -40,7 +40,8 @@ class Spheres(object):
           spheres_file (str): filename of a Spheres file to be read from disk (Default value = None)
 
         """
-
+ 
+        self.workers = workers
         if xyzrg is not None:
             self.xyzrg = xyzrg
         elif xyzr is not None:
@@ -136,15 +137,15 @@ class Spheres(object):
         """
 
         if other is not None:
-            return Spheres(xyzrg=np.concatenate([self.xyzrg, other.xyzrg], axis=0))
+            return Spheres(xyzrg=np.concatenate([self.xyzrg, other.xyzrg], axis=0), workers=self.workers)
         else:
-            return Spheres(xyzrg=np.copy(self.xyzrg))
+            return Spheres(xyzrg=np.copy(self.xyzrg), workers=self.workers)
 
 
     def copy(self):
         """ Creates a copy in memory of itself
         """
-        return Spheres(xyzrg=np.copy(self.xyzrg))
+        return Spheres(xyzrg=np.copy(self.xyzrg), workers=self.workers)
 
 
     def calculate_surface(self, probe_radius=1.4, cavity_atom=None, coordinate=None, all_components=False, exclusionary_radius=2.5, largest_only=False, noh=True, min_volume=200):
@@ -211,7 +212,7 @@ class Spheres(object):
             if mesh.volume < 0:
                 faces = np.flip(faces, axis=1)
                 mesh = trimesh.base.Trimesh(vertices=vertices, faces=faces)
-            bspheres = Spheres(bv=verts_raw, r=probe_radius, mesh=mesh)
+            bspheres = Spheres(bv=verts_raw, r=probe_radius, mesh=mesh, workers=self.workers)
             shutil.rmtree(tmpdir)
             logger.debug("Single volume calculated for {0}".format(self.name))
             return [bspheres]
@@ -232,15 +233,15 @@ class Spheres(object):
                 if largest_only:
                     if largest_mesh is None:
                         largest_mesh = tm
-                        bspheres = Spheres(bv=verts_raw, r=probe_radius, mesh=tm)
+                        bspheres = Spheres(bv=verts_raw, r=probe_radius, mesh=tm, workers=self.workers)
                     elif tm.volume > largest_mesh.volume:
                         largest_mesh = tm
-                        bspheres = Spheres(bv=verts_raw, r=probe_radius, mesh=tm)
+                        bspheres = Spheres(bv=verts_raw, r=probe_radius, mesh=tm, workers=self.workers)
                 else:
                     if min_volume is not None:
                         if tm.volume < min_volume:
                             continue
-                    bspheres = Spheres(bv=verts_raw, r=probe_radius, mesh=tm)
+                    bspheres = Spheres(bv=verts_raw, r=probe_radius, mesh=tm, workers=self.workers)
                     spheres_list.append(bspheres)
 
             shutil.rmtree(tmpdir)
@@ -265,11 +266,12 @@ class Spheres(object):
         """
 
         kdtree = scipy.spatial.cKDTree(self.xyz)
-        groups = kdtree.query_ball_point(ref_spheres.xyz, radius, n_jobs=-1)
+        kwargs = {"workers" : self.workers} if self.workers is not None else {"n_jobs" : -1}
+        groups = kdtree.query_ball_point(ref_spheres.xyz, radius, **kwargs)
         indices = np.unique(list(itertools.chain.from_iterable(groups)))
 
         logger.debug("Non-extraneous spheres removed")
-        return Spheres(xyzrg=np.copy(self.xyzrg[indices, :]))
+        return Spheres(xyzrg=np.copy(self.xyzrg[indices, :]), workers=self.workers)
 
 
     def nearest(self, coordinate, max_radius=None):
@@ -305,7 +307,8 @@ class Spheres(object):
         """
 
         kdtree = scipy.spatial.cKDTree(self.xyz)
-        dist, indices = kdtree.query(coordinates, n_jobs=-1)
+        kwargs = {"workers" : self.workers} if self.workers is not None else {"n_jobs" : -1}
+        dist, indices = kdtree.query(coordinates, **kwargs)
 
         sphere_inclusion = dist - self.r[indices]
         prop_groups = self.g[indices].astype(int)
@@ -326,7 +329,8 @@ class Spheres(object):
         """
 
         kdtree = scipy.spatial.cKDTree(self.xyz)
-        dist, indices = kdtree.query(coordinates, n_jobs=-1)
+        kwargs = {"workers" : self.workers} if self.workers is not None else {"n_jobs" : -1}
+        dist, indices = kdtree.query(coordinates, **kwargs)
 
         return self.xyz[indices[np.argmin(dist)], :]
 
