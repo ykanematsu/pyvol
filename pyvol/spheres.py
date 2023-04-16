@@ -265,7 +265,7 @@ class Spheres(object):
         """
 
         kdtree = scipy.spatial.cKDTree(self.xyz)
-        groups = kdtree.query_ball_point(ref_spheres.xyz, radius, n_jobs=-1)
+        groups = kdtree.query_ball_point(ref_spheres.xyz, radius)
         indices = np.unique(list(itertools.chain.from_iterable(groups)))
 
         logger.debug("Non-extraneous spheres removed")
@@ -305,7 +305,7 @@ class Spheres(object):
         """
 
         kdtree = scipy.spatial.cKDTree(self.xyz)
-        dist, indices = kdtree.query(coordinates, n_jobs=-1)
+        dist, indices = kdtree.query(coordinates)
 
         sphere_inclusion = dist - self.r[indices]
         prop_groups = self.g[indices].astype(int)
@@ -326,7 +326,7 @@ class Spheres(object):
         """
 
         kdtree = scipy.spatial.cKDTree(self.xyz)
-        dist, indices = kdtree.query(coordinates, n_jobs=-1)
+        dist, indices = kdtree.query(coordinates)
 
         return self.xyz[indices[np.argmin(dist)], :]
 
