@@ -146,7 +146,7 @@ def pymol_pocket_cmdline(protein=None, ligand=None, prot_file=None, lig_file=Non
         "palette": palette
     }
 
-    pymol_pocket(**opts)
+    return pymol_pocket(**opts)
 
 def pymol_pocket(**opts):
     """ Perform PyMOL-dependent processing of inputs to generate input files for PyVOL pocket processing
@@ -208,5 +208,5 @@ def pymol_pocket(**opts):
 
     pockets, output_opts = identify.pocket_wrapper(**opts)
 
-    display_pockets(pockets, **output_opts)
+    #display_pockets(pockets, **output_opts)
     return pockets, output_opts

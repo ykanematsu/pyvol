@@ -139,7 +139,10 @@ def pocket(**opts):
                 return None
 
             p_bs = p_s.calculate_surface(probe_radius=opts.get("min_rad"))[0]
-            id_coord = p_bs.nearest_coord_to_external(coordinate).reshape(1, -1)
+            if opts.get("resid") is not None:
+                id_coord = p_bs.nearest_coord_to_external(coordinate).reshape(1, -1)
+            else:
+                id_coord = coordinate
             bp_bs = pa_s.calculate_surface(probe_radius=opts.get("min_rad"), coordinate=id_coord)[0]
         else:
             logger.error("Unrecognized mode <{0}>--should be 'all', 'largest', or 'specific'".format(opts.get("mode")))
