@@ -169,6 +169,9 @@ def clean_opts(input_opts):
     opts["protein"] = input_opts.get("protein")
     opts["ligand"] = input_opts.get("ligand")
     opts["protein_only"] = input_opts.get("protein_only")
+    # Additional opts
+    opts["assembly"] = input_opts.get("assembly")
+    opts["guide_rad"] = input_opts.get("guide_rad")
     if not isinstance(opts["protein_only"], bool):
         opts["protein_only"] = _option_constraints.get("pymol_protein_only_dflt")
     opts["display_mode"] = input_opts.get("display_mode")

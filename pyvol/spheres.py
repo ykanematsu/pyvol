@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class Spheres(object):
     """ """
 
-    def __init__(self, xyz=None, r=None, xyzr=None, xyzrg=None, g=None, pdb=None, bv=None, mesh=None, name=None, spheres_file=None):
+    def __init__(self, xyz=None, r=None, xyzr=None, xyzrg=None, g=None, pdb=None, bv=None, mesh=None, name=None, spheres_file=None, isassembly=False):
         """
         A Spheres object contains a list of xyz centers with r radii and g groups. It can be defined using xyzrg, xyzr (and optionally g), xyz (and optionally r or g), a pdb file (and optionally r or g), or a list of vertices with normals bounded by the spheres (requires r and optionally includes g)
 
@@ -62,13 +62,18 @@ class Spheres(object):
 
             p = PDBParser(PERMISSIVE=1, QUIET=True)
             structure = p.get_structure("prot", pdb)
-
-            self.xyz = np.array([atom.get_coord() for atom in structure[0].get_atoms()])
+            if isassembly is not None:
+                self.xyz = np.array([atom.get_coord() for atom in structure.get_atoms()])
+            else:
+                self.xyz = np.array([atom.get_coord() for atom in structure[0].get_atoms()])
 
             if r is not None:
                 self.r = r
             else:
-                self.r = [_get_atom_radius(atom, rtype='united') for atom in structure[0].get_atoms()]
+                if isassembly is not None:
+                    self.r = [_get_atom_radius(atom, rtype='united') for atom in structure.get_atoms()]
+                else:
+                    self.r = [_get_atom_radius(atom, rtype='united') for atom in structure[0].get_atoms()]
 
             if g is not None:
                 self.g = g

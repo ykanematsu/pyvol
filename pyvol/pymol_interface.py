@@ -74,7 +74,7 @@ def load_calculation_cmdline(data_dir, prefix=None, display_mode=None, palette=N
     logger.info("Loading {0} with mode {1}".format(spheres.name, display_mode))
 
 
-def pymol_pocket_cmdline(protein=None, ligand=None, prot_file=None, lig_file=None, min_rad=1.4, max_rad=3.4, constrain_radii=True, mode="largest", coordinates=None, residue=None, resid=None, lig_excl_rad=None, lig_incl_rad=None, min_volume=200, subdivide=False, max_clusters=None, min_subpocket_rad=1.7, max_subpocket_rad=3.4, min_subpocket_surf_rad=1.0, radial_sampling=0.1, inclusion_radius_buffer=1.0, min_cluster_size=50, project_dir=None, output_dir=None, prefix=None, logger_stream_level="INFO", logger_file_level="DEBUG", protein_only=False, display_mode="solid", alpha=1.0, palette=None):
+def pymol_pocket_cmdline(protein=None, ligand=None, prot_file=None, lig_file=None, min_rad=1.4, max_rad=3.4, constrain_radii=True, mode="largest", coordinates=None, residue=None, resid=None, lig_excl_rad=None, lig_incl_rad=None, min_volume=200, subdivide=False, max_clusters=None, min_subpocket_rad=1.7, max_subpocket_rad=3.4, min_subpocket_surf_rad=1.0, radial_sampling=0.1, inclusion_radius_buffer=1.0, min_cluster_size=50, project_dir=None, output_dir=None, prefix=None, logger_stream_level="INFO", logger_file_level="DEBUG", protein_only=False, display_mode="solid", alpha=1.0, palette=None, guide_rad=None):
     """ PyMOL-compatible command line entry point
 
     Args:
@@ -143,7 +143,8 @@ def pymol_pocket_cmdline(protein=None, ligand=None, prot_file=None, lig_file=Non
         "protein_only": protein_only,
         "display_mode": display_mode,
         "alpha": alpha,
-        "palette": palette
+        "palette": palette,
+        "guide_rad": guide_rad
     }
 
     return pymol_pocket(**opts)
@@ -192,8 +193,14 @@ def pymol_pocket(**opts):
             return
         elif prot_atoms < 100:
             logger.warning("Only {0} atoms included in protein selection".format(prot_atoms))
-
-        cmd.save(opts.get("prot_file"), opts.get("protein"))
+        assembly = cmd.get("assembly")
+        if assembly >= "1":
+            state = { "state" : 0 }
+            opts.update({ "assembly" : assembly })
+        else:
+            state = {}
+             
+        cmd.save(opts.get("prot_file"), opts.get("protein"),**state)
         logger.debug("Protein '{0}' saved to {1}".format(opts.get("protein"), opts.get("prot_file")))
 
     if (opts.get("mode") == "specific") and (opts.get("ligand") is not None):
