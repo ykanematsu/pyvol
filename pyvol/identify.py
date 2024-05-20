@@ -79,12 +79,13 @@ def pocket(**opts):
             opts["lig_file"] = new_lig_file
     add_opt = { "isassembly" : True  } if opts.get("assembly") is not None else {}
     if "guide" in opts.get("protein") and opts.get("guide_rad") is not None: add_opt.update({ "r": opts.get("guide_rad") })
+    if opts.get("workers") is not None: add_opt.update({ "workers": opts.get("workers") })
     p_s = Spheres(pdb=opts.get("prot_file"), name="{0}_prot".format(opts.get("prefix")),**add_opt)
     logger.debug("Protein geometry read from {0}".format(opts.get("prot_file")))
 
     pl_s = p_s.copy()
     if opts.get("lig_file") is not None:
-        l_s = Spheres(pdb=opts.get("lig_file"), r=opts.get("lig_incl_rad"), name="{0}_lig_incl".format(opts.get("prefix")))
+        l_s = Spheres(pdb=opts.get("lig_file"), r=opts.get("lig_incl_rad"), name="{0}_lig_incl".format(opts.get("prefix")), workers=opts.get("workers"))
         logger.debug("Ligand geometry read from {0}".format(opts.get("lig_file")))
         if opts.get("lig_incl_rad") is not None:
             pl_s = p_s + l_s
@@ -101,7 +102,7 @@ def pocket(**opts):
     pa_s = p_s + pl_bs
     pa_s.name = "{0}_exterior".format(opts.get("prefix"))
     if (l_s is not None) and (opts.get("lig_excl_rad") is not None):
-        le_s = Spheres(xyz=l_s.xyz, r=opts.get("lig_excl_rad"), name="{0}_lig_excl".format(opts.get("prefix")))
+        le_s = Spheres(xyz=l_s.xyz, r=opts.get("lig_excl_rad"), name="{0}_lig_excl".format(opts.get("prefix")), workers=opts.get("workers"))
         le_bs = le_s.calculate_surface(probe_radius=opts.get("max_rad"))[0]
         pa_s = pa_s + le_bs
         logger.debug("Ligand-excluded radius of {0} applied".format(opts.get("lig_excl_rad")))
